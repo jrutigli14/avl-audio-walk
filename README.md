@@ -19,3 +19,5 @@ Host these files on any HTTPS static host (GitHub Pages, Netlify, Cloudflare Pag
 
 ## Route
 16 curated Urban Trail highlights, starting at official Stop #8 (Flat Iron Architecture), looping through downtown and returning near the Flat Iron.
+
+Pages deployment trigger.
