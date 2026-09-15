@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>AVL Audio Walk</title>
+<style>
+:root{--bg:#f6f2ea;--card:#fff;--ink:#161616;--muted:#666;--accent:#111;--soft:#e8e0d3}
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:22px 18px 14px;position:sticky;top:0;background:rgba(246,242,234,.96);backdrop-filter:blur(12px);z-index:5;border-bottom:1px solid #ddd}
+h1{font-size:24px;margin:0 0 5px} .sub{color:var(--muted);font-size:14px}
+main{max-width:720px;margin:auto;padding:16px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 14px}
+button,.btn{border:0;border-radius:14px;padding:14px 15px;font-weight:700;font-size:16px;background:#111;color:#fff;text-decoration:none;text-align:center}
+.secondary{background:#e5ddd0;color:#111} .danger{background:#7b1c1c}
+.status{background:#fff;border:1px solid #ddd;border-radius:16px;padding:14px;margin:10px 0 16px}
+.status strong{display:block;margin-bottom:4px} .small{font-size:13px;color:var(--muted)}
+.progress{height:8px;background:#ddd2c2;border-radius:99px;overflow:hidden;margin-top:10px} .bar{height:100%;background:#111;width:0%}
+.card{background:var(--card);border:1px solid #ded8ce;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.card.active{outline:3px solid #111} .done{opacity:.58} .tag{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#766f65;font-weight:800}
+.card h2{font-size:20px;margin:4px 0 7px} .look{font-weight:600;margin:8px 0 10px} .narr{line-height:1.48;color:#333}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px} .mini{font-size:14px;padding:10px 12px;border-radius:12px}
+.distance{font-variant-numeric:tabular-nums;font-weight:800} footer{padding:24px 4px 40px;color:#777;font-size:12px;line-height:1.4}
+.notice{background:#fff3cd;border:1px solid #ead58b;border-radius:14px;padding:12px;margin-bottom:14px;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>AVL Audio Walk</h1>
+  <div class="sub">Flat Iron → Asheville Urban Trail highlights → Flat Iron · ~90–120 min</div>
+</header>
+<main>
+<div class="notice"><b>iPhone:</b> keep this page open while walking. GPS and automatic narration work best in the foreground. Tap “Start GPS + Audio” once and allow location access.</div>
+<div class="controls">
+  <button id="startBtn">Start GPS + Audio</button>
+  <button id="pauseBtn" class="secondary">Pause Audio</button>
+</div>
+<div class="status">
+  <strong id="statusText">Ready to start at Flat Iron Architecture.</strong>
+  <div class="small" id="gpsText">GPS not started.</div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+</div>
+<div id="cards"></div>
+<footer>
+Original narration based on Asheville’s official Urban Trail and public historical sources. This is an independent personal guide, not an official City of Asheville or Explore Asheville product. Location triggers use approximate coordinates and may vary by 20–100+ feet depending on GPS conditions.
+</footer>
+</main>
+<script>
+const stops = [{"n": 8, "name": "Flat Iron Architecture", "lat": 35.595217, "lon": -82.554867, "look": "Find the giant iron at Battery Park Avenue and Wall Street, beside the Flat Iron Building.", "narration": "Welcome to Asheville. We’re starting at one of the city’s best visual jokes: a giant flat iron beside the Flat Iron Building. The 1926 building belongs to Asheville’s extraordinary 1920s building boom, when tourism money and civic ambition reshaped downtown. The irony is that the Depression soon froze much of that architecture in place. Asheville spent decades paying its debts instead of bulldozing and rebuilding, which helped preserve the streetscape you’re about to walk. From here, head down Wall Street. Asheville’s history is often easiest to understand by noticing how steep the ground is—and how creatively people learned to build on it."}, {"n": 9, "name": "Cat Walk", "lat": 35.594492, "lon": -82.556148, "look": "Look for the bronze cats along Wall Street.", "narration": "The bronze cats mark a real piece of Asheville engineering history. Before this hillside was cut down and Wall Street was paved, elevated footbridges—literal catwalks—connected the retaining wall to second-floor shop entrances. Some buildings you see from Wall Street are effectively the upper stories of buildings facing Patton Avenue below. E. W. Grove later removed a massive amount of earth here as he remade this part of downtown. Look closely for the mouse and rat hiding around the cats. This stop is a good reminder that Asheville’s charming street pattern is partly the result of people constantly negotiating with the mountains beneath the city."}, {"n": 10, "name": "Grove’s Vision", "lat": 35.59605, "lon": -82.55577, "look": "Stand near the Grove Arcade and look up at the roofline.", "narration": "E. W. Grove imagined this block as something even more dramatic than what you see today. His Grove Arcade was designed as a mixed-use commercial center crowned by a tower that would dominate Asheville’s skyline. Grove died before the tower was completed, and the Depression ended the dream, though structural support for it remained. The Arcade itself opened in 1929 and became one of downtown’s defining buildings. During World War Two the federal government took it over, forcing out shops and offices. It eventually returned to public life after restoration. If you have ten minutes, step inside—the light, arches and human scale make this detour worth it."}, {"n": 12, "name": "Guastavino’s Monument", "lat": 35.59695, "lon": -82.55595, "look": "Face the Basilica of St. Lawrence and study its dome.", "narration": "This is one of Asheville’s architectural treasures. Rafael Guastavino, the Spanish-born master of thin-tile vaulting, helped create the Basilica of St. Lawrence and is buried here. Its great elliptical dome was built with layers of tile and mortar rather than a conventional steel frame. Guastavino’s technique also appears in famous buildings around the United States, including spaces in New York. His Asheville connection deepened through work associated with Biltmore and his later life in Western North Carolina. If the Basilica is open, go inside quietly and look up. The engineering becomes much more impressive when you see how the dome seems to float."}, {"n": 13, "name": "Appalachian Stage", "lat": 35.5964, "lon": -82.5543, "look": "Find the bronze musicians and dancers near Harrah’s Cherokee Center.", "narration": "This stop celebrates the music culture you’ve already experienced firsthand in Western North Carolina. The figures honor Appalachian music and the Mountain Dance and Folk Festival, first organized in Asheville in 1927 by Bascom Lamar Lunsford. That festival helped preserve and present mountain traditions at a time when old-time music, ballads and dance were being transformed by radio and commercial recording. Asheville still treats music less like a museum piece and more like a living public activity—from street players to bluegrass jams and festivals. After Mountain Song, this is one of the Urban Trail stops that should feel especially connected to the trip you’re having."}, {"n": 15, "name": "Marketplace", "lat": 35.59655, "lon": -82.5537, "look": "On Walnut Street, look for the apple basket and wagon-wheel imagery.", "narration": "Long before Asheville became a restaurant and arts destination, this part of town functioned as a working market district. Produce markets and livery stables lined what is now Lexington Avenue, once called Water Street. Farmers arrived with goods, horses needed shelter, and the wide doors you can still spot on some older buildings hint at their commercial past. The apple basket and wagon imagery make the history literal. What’s interesting is the continuity: Asheville still prizes local growers, tailgate markets and regional ingredients. The city’s modern food identity feels new, but its relationship with surrounding farms is much older."}, {"n": 18, "name": "Wolfe’s Neighborhood", "lat": 35.5989, "lon": -82.5519, "look": "Stand in the oversized footprints and look through the bronze neighborhood scene.", "narration": "Thomas Wolfe grew up in this neighborhood, and this sculpture asks you to see two Ashevilles at once. The bronze foreground reconstructs buildings from Wolfe’s youth, while the real city remains visible through it. Wolfe transformed Asheville into literature, most famously in Look Homeward, Angel, drawing heavily from the people and places around him. His work made some neighbors furious because they recognized themselves. The oversized footprints are a playful reference to Wolfe himself—he was famously tall. The Thomas Wolfe Memorial is nearby, in the boarding house run by his mother, and is worth a separate visit if his story catches your interest."}, {"n": 21, "name": "On the Move", "lat": 35.5968, "lon": -82.5517, "look": "At Walnut and North Market, find the interactive wheel.", "narration": "Asheville’s growth depended on transportation. Mountain roads and livestock routes came first; then the railroad arrived in 1880 and changed the city almost overnight. Electric trolleys followed, knitting neighborhoods and resorts together. This interactive sculpture compresses that transportation history into sound and movement. Spin the wheel if it’s working. Also notice North Market Street itself: brick streets once covered much more of downtown. Transportation brought visitors, money and architecture—but it also tied Asheville more tightly to national economic booms and busts. The city you’re walking through is partly the product of becoming easier to reach."}, {"n": 22, "name": "Civic Pride", "lat": 35.595783, "lon": -82.550767, "look": "Look for the historic bell near the government buildings.", "narration": "This bell recalls Asheville’s earlier city hall, which stood at the east end of Pack Square before the current Art Deco civic complex was built. Asheville’s name dates to 1797, honoring North Carolina governor Samuel Ashe. But the more interesting story is what happened in the 1920s, when civic leaders commissioned government buildings that were unusually expressive for a relatively small mountain city. In the next few minutes you’ll see the result: one of Asheville’s signature architectural ensembles. Move toward the colorful City Building and compare it with the much more restrained county courthouse next door."}, {"n": 25, "name": "Ellington’s Dream", "lat": 35.59555, "lon": -82.54945, "look": "Study Asheville City Hall’s colorful stepped silhouette.", "narration": "Architect Douglas Ellington imagined a coordinated pair of civic buildings here. Only City Hall fully realized his vision. Completed in 1928, it rises in layered, colorful setbacks that make it one of Asheville’s most recognizable Art Deco buildings. The county courthouse beside it took a more conservative path, which makes the contrast unusually clear. Ellington used decorative motifs that referenced the region, including feather-like ornamentation intended as an acknowledgment of Cherokee history. Whether that historic gesture feels sufficient today is a separate question, but architecturally the building captures Asheville at peak 1920s confidence—bold, theatrical and determined to look like a city with a future."}, {"n": 29, "name": "The Block", "lat": 35.594417, "lon": -82.55035, "look": "On South Market near Eagle Street, find the Urban Trail sculpture honoring The Block.", "narration": "This area was the historic center of Asheville’s Black business and social life. Known as The Block, it developed around Eagle and Market Streets with restaurants, shops, professional offices, churches and gathering places serving Asheville’s African American community during segregation. The YMI Cultural Center, founded in the 1890s with support connected to George Vanderbilt, remains an important landmark here. Urban renewal and later economic changes damaged much of the district, but its history is increasingly being interpreted through local institutions and Asheville’s Black Cultural Heritage Trail. Take a moment here: this story complicates the postcard version of downtown and makes the city’s history more complete."}, {"n": 1, "name": "Walk Into History", "lat": 35.595, "lon": -82.55155, "look": "At Pack Square, find the Urban Trail’s conventional starting marker.", "narration": "Pack Square is Asheville’s civic living room and the official starting point of the Urban Trail, even though we joined it at the Flat Iron. The square grew around the courthouse and became the stage for commerce, celebrations, protests and public life. The trail itself was created as a museum without walls: instead of placing Asheville’s past in one building, it scatters history through the streets where events happened. That idea suits the city. Asheville makes more sense when architecture, landscape, commerce and culture are experienced together rather than separated into exhibits."}, {"n": 2, "name": "Crossroads", "lat": 35.5951, "lon": -82.55175, "look": "Look for the bronze pigs and turkeys near Pack Square.", "narration": "The animals underfoot represent the Buncombe Turnpike, an early nineteenth-century route through the mountains. Drovers moved pigs, turkeys and cattle along this corridor toward markets farther south. Indigenous travel routes preceded it, and later rail and trolley lines layered new transportation networks over the old paths. That sequence—footpath, livestock road, railroad, trolley, automobile—is one of the simplest ways to understand Asheville’s development. Geography never stopped mattering; technology simply changed how people crossed it."}, {"n": 3, "name": "Stepping Out", "lat": 35.59435, "lon": -82.55295, "look": "Find the bronze top hat, cane and gloves along Patton Avenue.", "narration": "The top hat and cane recall a period when Patton Avenue was Asheville’s entertainment spine. Theaters and the Grand Opera House brought touring performers and crowds downtown, turning this hilltop street into a cultural as well as commercial center. Even the celebrated French actress Sarah Bernhardt passed through Asheville’s theatrical world. Most of those old theaters vanished, but the sculpture asks you to imagine an evening when downtown was filled with marquees, streetcars and people dressed for a performance. Asheville’s current live-music culture has different venues and styles, but the habit of going downtown for entertainment is not new."}, {"n": 6, "name": "Elizabeth Blackwell", "lat": 35.59475, "lon": -82.5532, "look": "Find the bench decorated with medicinal plants.", "narration": "Elizabeth Blackwell became the first woman in the United States to earn a medical degree, in 1849, and later worked to expand medical education and care for women. Asheville honors her because she spent part of her youth here. The medicinal-plant imagery on this bench links her profession to the natural world. Blackwell’s importance is larger than a local biography: her career challenged assumptions about who could become a physician and helped create institutions that trained women in medicine. It is one of the quieter Urban Trail stops, but one of the most consequential stories."}, {"n": 7, "name": "Art Deco Masterpiece", "lat": 35.59455, "lon": -82.55415, "look": "Look toward the S&W Building on Patton Avenue.", "narration": "The S&W Building is a compact lesson in Asheville Art Deco. Designed by Douglas Ellington and completed in 1929, it used decorative geometry and rich materials to turn a cafeteria into an architectural event. The building arrived at the very end of Asheville’s boom—almost exactly when the economic world was about to collapse. That timing is central to downtown’s survival. The Depression left Asheville with severe debt, and for decades the city lacked the money for large-scale redevelopment. What looked like economic paralysis later became accidental preservation. From here, you’re only a short walk back to the Flat Iron, where our loop began."}];
+let current = Number(localStorage.getItem("avl-current") || 0);
+let watchId = null, audioEnabled = false, speaking = false, userPos = null;
+const triggerMeters = 95;
+
+function hav(a,b,c,d) {
+  const R=6371000, p=Math.PI/180;
+  const dlat=(c-a)*p, dlon=(d-b)*p;
+  const x=Math.sin(dlat/2)**2 + Math.cos(a*p)*Math.cos(c*p)*Math.sin(dlon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+function mapURL(s) {
+  return `https://maps.apple.com/?daddr=${s.lat},${s.lon}&dirflg=w`;
+}
+function speakStop(i) {
+  if (!audioEnabled) return;
+  speechSynthesis.cancel();
+  const s=stops[i];
+  const u=new SpeechSynthesisUtterance(`${s.name}. ${s.narration}`);
+  u.rate=0.95; u.pitch=1.0; u.lang="en-US";
+  speaking=true;
+  u.onend=()=>speaking=false;
+  speechSynthesis.speak(u);
+}
+function render() {
+  const root=document.getElementById("cards"); root.innerHTML="";
+  stops.forEach((s,i)=>{
+    const el=document.createElement("section");
+    el.className="card "+(i===current?"active ":"")+(i<current?"done":"");
+    let dist = userPos ? Math.round(hav(userPos.lat,userPos.lon,s.lat,s.lon)) : null;
+    el.innerHTML=`
+      <div class="tag">Stop ${i+1} of ${stops.length} · Official Urban Trail #${s.n}</div>
+      <h2>${s.name}</h2>
+      ${dist!==null?`<div class="distance">${dist} m away</div>`:""}
+      <div class="look">${s.look}</div>
+      <div class="narr">${s.narration}</div>
+      <div class="row">
+        <button class="mini play" data-i="${i}">▶︎ Play</button>
+        <a class="btn secondary mini" href="${mapURL(s)}" target="_blank">Apple Maps</a>
+        ${i===current?`<button class="mini secondary arrive" data-i="${i}">Mark arrived</button>`:""}
+      </div>`;
+    root.appendChild(el);
+  });
+  root.querySelectorAll(".play").forEach(b=>b.onclick=()=>{audioEnabled=true;speakStop(Number(b.dataset.i))});
+  root.querySelectorAll(".arrive").forEach(b=>b.onclick=()=>arrive(Number(b.dataset.i), true));
+  document.getElementById("bar").style.width=`${Math.round(current/stops.length*100)}%`;
+  if(current>=stops.length) document.getElementById("statusText").textContent="Tour complete — welcome back to the Flat Iron.";
+  else document.getElementById("statusText").textContent=`Next: ${stops[current].name}`;
+}
+function arrive(i, manual=false) {
+  if(i!==current) return;
+  if(audioEnabled) speakStop(i);
+  setTimeout(()=>{
+    current=Math.min(current+1,stops.length);
+    localStorage.setItem("avl-current",current);
+    render();
+    if(current<stops.length) document.getElementById("statusText").textContent=`Continue to ${stops[current].name}.`;
+  }, manual?200:1200);
+}
+document.getElementById("startBtn").onclick=()=>{
+  audioEnabled=true;
+  const intro=new SpeechSynthesisUtterance("Asheville audio walk ready. I’ll speak when you reach each stop.");
+  intro.rate=.95; speechSynthesis.speak(intro);
+  if(!navigator.geolocation) {
+    document.getElementById("gpsText").textContent="Geolocation is not available. Use Apple Maps and Mark arrived.";
+    return;
+  }
+  if(watchId!==null) navigator.geolocation.clearWatch(watchId);
+  watchId=navigator.geolocation.watchPosition(pos=>{
+    userPos={lat:pos.coords.latitude,lon:pos.coords.longitude};
+    const acc=Math.round(pos.coords.accuracy);
+    document.getElementById("gpsText").textContent=`GPS active · accuracy about ${acc} m`;
+    if(current<stops.length) {
+      const s=stops[current], d=hav(userPos.lat,userPos.lon,s.lat,s.lon);
+      if(d<=triggerMeters) arrive(current,false);
+    }
+    render();
+  }, err=>{
+    document.getElementById("gpsText").textContent=`GPS unavailable: ${err.message}. Use Apple Maps + Mark arrived.`;
+  }, {enableHighAccuracy:true,maximumAge:3000,timeout:12000});
+};
+document.getElementById("pauseBtn").onclick=()=>{speechSynthesis.cancel();speaking=false;};
+render();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
+</script>
+</body>
+</html>
